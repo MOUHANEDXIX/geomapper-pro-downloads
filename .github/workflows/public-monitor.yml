@@ -1,0 +1,72 @@
+name: Public deployment monitoring
+
+"on":
+  schedule:
+    # Static Cloudflare/GitHub checks only: do not keep the free Render API awake.
+    - cron: '7,22,37,52 * * * *'
+    # Four cold-start-aware API checks per day, separate from the static cadence.
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Check static website/download metadata or include API readiness
+        required: true
+        default: full
+        type: choice
+        options: [static, full]
+      exercise_alert:
+        description: Deliberately fail after checks to test the owner's GitHub alert route
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-monitor-${{ github.event.schedule || inputs.mode || 'manual' }}
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    # The private source repository retains this reviewed copy but never allocates
+    # a scheduled runner. Root publishes only this workflow/script/public guide.
+    if: ${{ github.repository == 'MOUHANEDXIX/geomapper-pro-downloads' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      MONITOR_MODE: ${{ github.event.schedule == '17 */6 * * *' && 'full' || inputs.mode || 'static' }}
+      MONITOR_SITE: ${{ vars.MONITOR_SITE_URL || 'https://geomapperpro.pages.dev' }}
+      MONITOR_API: ${{ vars.MONITOR_API_URL || 'https://geomapper-pro-backend.onrender.com' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Run bounded anonymous checks
+        run: >-
+          python3 -B scripts/monitor_public_deployment.py
+          --mode "$MONITOR_MODE" --site "$MONITOR_SITE" --api "$MONITOR_API"
+          --output-dir monitor-evidence
+      - name: Exercise the configured failure notification route
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.exercise_alert }}
+        run: |
+          printf 'Intentional alert delivery exercise; this is not an outage.\n' >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+      - name: Show sanitized status and failure evidence
+        if: always()
+        run: |
+          if [ -f monitor-evidence/summary.md ]; then
+            cat monitor-evidence/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf 'Monitoring did not complete. Inspect the failed workflow step.\n' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Retain sanitized failure evidence
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: public-monitor-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            monitor-evidence/monitor.json
+            monitor-evidence/summary.md
+          if-no-files-found: warn
+          retention-days: 7
