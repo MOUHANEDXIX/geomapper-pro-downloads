@@ -1,18 +1,14 @@
 # GeoMapper Pro Downloads
 
-Public downloads for GeoMapper Pro, a Windows desktop GIS application for
-coordinate conversion, raster workflows, vector conversion, and secure synced
-account access.
+GeoMapper Pro is a Windows desktop GIS application for coordinate conversion, raster workflows, vector conversion and synced account access.
 
-Website: https://geomapper-pro.pages.dev/
+Use the [official website](https://geomapperpro.pages.dev/) and [download page](https://geomapperpro.pages.dev/download) for the published release choices and installation guidance.
 
-Download the latest Windows build:
-https://github.com/MOUHANEDXIX/geomapper-pro-downloads/releases/latest/download/GeoMapperPro.exe
+| Channel | Published installer |
+| --- | --- |
+| Stable 1.0.5 | [GeoMapperProSetup.exe](https://github.com/MOUHANEDXIX/geomapper-pro-downloads/releases/download/v1.0.5/GeoMapperProSetup.exe) |
+| Beta 1.3.13 | [GeoMapperProBetaSetup.exe](https://github.com/MOUHANEDXIX/geomapper-pro-downloads/releases/download/v1.3.13-beta/GeoMapperProBetaSetup.exe) |
 
-Helpful pages:
+[Features](https://geomapperpro.pages.dev/features) · [Changelog](https://geomapperpro.pages.dev/changelog) · [Support](https://geomapperpro.pages.dev/support) · [FAQ](https://geomapperpro.pages.dev/faq) · [Privacy](https://geomapperpro.pages.dev/privacy)
 
-- Features: https://geomapper-pro.pages.dev/features
-- Download: https://geomapper-pro.pages.dev/download
-- Support: https://geomapper-pro.pages.dev/support
-- FAQ: https://geomapper-pro.pages.dev/faq
-- Privacy: https://geomapper-pro.pages.dev/privacy
+[Public deployment monitoring](https://github.com/MOUHANEDXIX/geomapper-pro-downloads/actions/workflows/public-monitor.yml) checks website/download metadata every 15 minutes and backend readiness every six hours. See [the monitoring guide](docs/PUBLIC_MONITORING.md) for its scope and alert behavior. These checks do not install or certify the desktop application.
