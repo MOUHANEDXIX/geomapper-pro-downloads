@@ -56,6 +56,11 @@ intended owner receives alerts. Verify the actual account setting and actor duri
 activation, then deliberately exercise a synthetic failed workflow and recovery.
 Failure-only settings do not promise a recovery email. There is no invented alert
 address or automatic issue creation.
+Use **Run workflow**, choose **static** and enable **exercise_alert** for one
+deliberate failed notification exercise. Its step summary labels the failure as
+intentional. Confirm the intended owner's actual GitHub/email notification, then
+run **static** again with **exercise_alert** disabled to record recovery. The
+option defaults to false and cannot affect scheduled checks.
 [GitHub workflow notifications](https://docs.github.com/en/actions/concepts/workflows-and-actions/notifications-for-workflow-runs).
 
 ## Checks and interpretation

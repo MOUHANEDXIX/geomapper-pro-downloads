@@ -14,6 +14,11 @@ name: Public deployment monitoring
         default: full
         type: choice
         options: [static, full]
+      exercise_alert:
+        description: Deliberately fail after checks to test the owner's GitHub alert route
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -42,6 +47,11 @@ jobs:
           python3 -B scripts/monitor_public_deployment.py
           --mode "$MONITOR_MODE" --site "$MONITOR_SITE" --api "$MONITOR_API"
           --output-dir monitor-evidence
+      - name: Exercise the configured failure notification route
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.exercise_alert }}
+        run: |
+          printf 'Intentional alert delivery exercise; this is not an outage.\n' >> "$GITHUB_STEP_SUMMARY"
+          exit 1
       - name: Show sanitized status and failure evidence
         if: always()
         run: |
