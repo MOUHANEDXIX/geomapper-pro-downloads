@@ -12,3 +12,5 @@ Use the [official website](https://geomapperpro.pages.dev/) and [download page](
 [Features](https://geomapperpro.pages.dev/features) · [Changelog](https://geomapperpro.pages.dev/changelog) · [Support](https://geomapperpro.pages.dev/support) · [FAQ](https://geomapperpro.pages.dev/faq) · [Privacy](https://geomapperpro.pages.dev/privacy)
 
 [Public deployment monitoring](https://github.com/MOUHANEDXIX/geomapper-pro-downloads/actions/workflows/public-monitor.yml) checks website/download metadata every 15 minutes and backend readiness every six hours. See [the monitoring guide](docs/PUBLIC_MONITORING.md) for its scope and alert behavior. These checks do not install or certify the desktop application.
+
+Read the [expanded Stable1.0.5 / Beta1.3.13 patch notes](docs/PATCH_NOTES_1_0_5_1_3_13.md) for the complete update details, edition differences and accuracy/file-handling limits.

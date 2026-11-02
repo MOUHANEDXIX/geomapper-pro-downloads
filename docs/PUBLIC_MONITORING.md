@@ -25,9 +25,15 @@ They still count against the workspace's shared free instance allowance.
 [Render free-service limits](https://render.com/docs/free).
 
 Ordinary requests have a 15-second socket timeout and a 512 KiB inspection cap.
-Readiness gets up to two attempts: 75 seconds, a 15-second pause, then 45 seconds.
-Only transient network/server/loading failures are retried. A successful cold
-start records both attempts but passes the batch. An unsuccessful readiness check
+Readiness schedules at most six attempts against a 150-second recovery budget: the
+first socket timeout is capped at 75 seconds and subsequent ones at 45, with
+15-second pauses. Each new timeout/pause is also capped by the remaining budget.
+This allows repeated immediate gateway 503s to recover during a cold start;
+socket timeouts alone would not do that. Only transient network/server/loading
+failures are retried. A successful cold start records every attempt but passes
+the batch. A response arriving after the budget fails. Socket timeouts do not
+strictly bound DNS, redirects or every body read; the workflow's eight-minute
+limit remains the final execution bound. An unsuccessful readiness check
 skips further API requests. The workflow has an eight-minute final limit.
 
 GitHub schedules are approximate: queue delays and dropped scheduled runs are

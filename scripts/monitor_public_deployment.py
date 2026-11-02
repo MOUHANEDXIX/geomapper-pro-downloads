@@ -105,11 +105,12 @@ def release(value, channel, repository):
 
 
 class Monitor:
-    def __init__(self, site=SITE, api=API, repository=DOWNLOAD_REPO, *, transport=fetch, sleep=time.sleep):
+    def __init__(self, site=SITE, api=API, repository=DOWNLOAD_REPO, *, transport=fetch, sleep=time.sleep, clock=time.monotonic):
         self.site, self.api = origin(site), origin(api)
         if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
             raise ValueError("Invalid repository")
         self.repository, self.transport, self.sleep = repository, transport, sleep
+        self.clock = clock
         self.checks = {}
 
     def mark(self, name, ok, reason=None, **fields):
@@ -177,20 +178,32 @@ class Monitor:
 
     def ready(self):
         attempts = []
-        for index, timeout in enumerate((75, 45)):
+        # A gateway may return 503 immediately while an idle free service spins
+        # up. A long socket timeout alone does not provide a recovery window.
+        # Bound attempt count and retry scheduling. Socket timeouts are not a
+        # hard wall-clock bound for DNS, redirects or body reads.
+        deadline = self.clock() + 150
+        self.mark("api.readiness", False, "DeadlineExceeded", status=None, elapsed_ms=0)
+        for index in range(6):
+            remaining = deadline - self.clock()
+            if remaining <= 0:
+                break
+            timeout = min(75 if index == 0 else 45, remaining)
             response = self.request("api.readiness", self.api + "/readyz", api=True, timeout=timeout)
             value = self.document("api.readiness", response)
             if value is not None and value.get("ok") is not True:
                 self.checks["api.readiness"].update(ok=False, reason="NotReady")
+            if self.clock() > deadline:
+                self.checks["api.readiness"].update(ok=False, reason="DeadlineExceeded")
             check = self.checks["api.readiness"]
             attempts.append(dict(check))
             if check["ok"]:
                 break
             retry = (check.get("status") in (502, 503, 504) or check.get("reason") in ("Timeout", "NetworkError", "InvalidJSON"))
-            if index == 0 and retry:
-                self.sleep(15)
-            else:
+            remaining = deadline - self.clock()
+            if not retry or index == 5 or remaining <= 0:
                 break
+            self.sleep(min(15, remaining))
         self.checks["api.readiness"]["attempts"] = attempts
         return self.checks["api.readiness"]["ok"]
 
